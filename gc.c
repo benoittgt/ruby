@@ -2342,7 +2342,14 @@ rb_gc_mark_values(long n, const VALUE *values)
 void
 rb_gc_mark_vm_stack_values(long n, const VALUE *values)
 {
+    int frame_flag_count = 0;
     for (long i = 0; i < n; i++) {
+        if (VM_FRAME_MAGIC_METHOD <= values[i] && values[i] < 0x80000000ul) { // see VM_FRAME_MAGIC_MASK
+            frame_flag_count++;
+        }
+        if (RB_TYPE_P(values[i], T_NONE)) {
+                rb_bug("T_NONE on stack. Seems to be from %dth frame", frame_flag_count);
+        }
         gc_mark_and_pin_internal(values[i]);
     }
 }
